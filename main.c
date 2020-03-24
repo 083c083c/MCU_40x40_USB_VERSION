@@ -136,7 +136,7 @@ void stop_motor_D() 																	//функция остановки дви�
 void motor_F(int speed, int steps, int dir)						//функция управления обмотками движка
 { 
 		
-		if (dir==0)	
+		if (dir==1)	
 {																					//ПРОТИВ ЧАСОВОЙ
 		
 		for(int i = 0; i<steps; i++)
@@ -170,11 +170,11 @@ HAL_GPIO_WritePin(PORT_M_2,BLACK_4,GPIO_PIN_SET);
 
 HAL_Delay(speed);
 
-current_pos_f--;
+current_pos_f++;
 	}
 }
 
-		else if (dir==1)	
+		else if (dir==0)	
 {																					//ПО ЧАСОВОЙ
 		
 		for(int i = 0; i<steps; i++)
@@ -207,7 +207,7 @@ HAL_GPIO_WritePin(PORT_M_2,BLACK_4,GPIO_PIN_SET);
 				
 HAL_Delay(speed);
 
-current_pos_f++;
+current_pos_f--;
 		}
 	}
 }
@@ -297,7 +297,7 @@ void go_to_min_f()																		//движение до min фокуса
 				
 				while(MIN_FLAG_F != 1)
            { 
-						 motor_F(1,5,0);
+						 motor_F(1,5,1);
            }       
       }
 void go_to_min_d()																		//движение до min диафрагмы
@@ -317,7 +317,7 @@ void go_to_max_f()																		//движение до max фокуса
 				
 				while(MAX_FLAG_F != 1)
            {
-						 motor_F(1,5,1);
+						 motor_F(1,5,0);
            }
       }
 void go_to_max_d()																		//движение до max диафрагмы
@@ -488,7 +488,8 @@ int stps_d;
 							all_steps_f = init_F();
 							if (current_pos_f < 0) current_pos_f = 0;
 							else current_pos_f = all_steps_f;
-							stop_motor_F();						
+							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
+							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);					
 						break;
 					
 					case 2:					
@@ -497,7 +498,8 @@ int stps_d;
 							all_steps_d = init_D();
 							if (current_pos_d < 0) current_pos_d = 0;
 							else current_pos_d = all_steps_d; 
-							stop_motor_D();
+							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
+							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);					
 						break;					
 					
 					case 3:					
@@ -518,7 +520,6 @@ int stps_d;
 														
 							motor_F(1,go_step_f,go_dir_f);
 							go_step_f = 0;
-							stop_motor_F();
 
 							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
 							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);													
@@ -542,7 +543,6 @@ int stps_d;
 														
 							motor_D(1,go_step_d,go_dir_d);
 							go_step_d = 0;
-							stop_motor_D();
 
 							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
 							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);													
@@ -566,7 +566,6 @@ int stps_d;
 														
 							motor_F(1,go_step_f,go_dir_f);
 							go_step_f = 0;
-							stop_motor_F();
 
 							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
 							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);													
@@ -590,46 +589,74 @@ int stps_d;
 														
 							motor_D(1,go_step_d,go_dir_d);
 							go_step_d = 0;
-							stop_motor_D();
 
 							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
 							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);													
 						break;								
 					
-					case 7:				
+					case 7:
+							if (current_pos_f<(all_steps_f-9))
+							{							
 							motor_F(1,10,1);
 							go_step_f = 0;
-							stop_motor_F();
 					
 							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);														
+							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);
+							}
+							else 
+							{
+							HAL_UART_Transmit(&huart1,(uint8_t *)"not allowed\n",12,0xfff);	
+							HAL_UART_Transmit(&huart1,(uint8_t *)"<10 steps left\n",15,0xfff);
+							}					
 						break;
 					
-					case 8:				
+					case 8:	
+							if (current_pos_d<(all_steps_d-9))
+							{							
 							motor_D(1,10,1);
 							go_step_d = 0;
-							stop_motor_D();
-					
+							
 							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
 							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);														
+							}
+							else 
+							{
+							HAL_UART_Transmit(&huart1,(uint8_t *)"not allowed\n",12,0xfff);	
+							HAL_UART_Transmit(&huart1,(uint8_t *)"<10 steps left\n",15,0xfff);
+							}
 						break;					
 
-					case 9:				
+					case 9:		
+
+							if (current_pos_f>9)
+							{								
 							motor_F(1,10,0);
 							go_step_f = 0;
-							stop_motor_F();
 
 							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
 							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);														
+							}
+							else 
+							{
+							HAL_UART_Transmit(&huart1,(uint8_t *)"not allowed\n",12,0xfff);	
+							HAL_UART_Transmit(&huart1,(uint8_t *)"<10 steps left\n",15,0xfff);
+							}
 						break;
 					
-					case 10:				
+					case 10:	
+							if (current_pos_d>9)
+							{
 							motor_D(1,10,0);
 							go_step_d = 0;
-							stop_motor_D();
-
+							
 							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);														
+							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);
+							}
+							else 
+							{
+							HAL_UART_Transmit(&huart1,(uint8_t *)"not allowed\n",12,0xfff);	
+							HAL_UART_Transmit(&huart1,(uint8_t *)"<10 steps left\n",15,0xfff);
+							}					
 						break;					
 					
 					case 11:
@@ -661,56 +688,19 @@ int stps_d;
 																
 									motor_F(1,go_step_f,go_dir_f);
 									go_step_f = 0;
-									stop_motor_F();
 
 									sprintf(valuev,"Current position: %d steps\n", current_pos_f);
 									HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);
 								}
 						break;
-
-//					case 16:
-//							percent_int_d = atoi(str);	
-//					
-//							if (percent_int_d<0)
-//								{
-//									HAL_UART_Transmit(&huart1,(uint8_t *)"invalid command\n",16,0xfff);
-//								}
-//							else if (percent_int_d>100)
-//								{
-//									HAL_UART_Transmit(&huart1,(uint8_t *)"invalid command\n",16,0xfff);
-//								}								
-//							else
-//								{
-//									one_step_d = all_steps_d/100.0;          
-//									stps_d = ((float)percent_int_d * one_step_d);
-//														
-//									if (current_pos_d > stps_d) 
-//										{
-//											go_step_d = abs(current_pos_d-stps_d);
-//											go_dir_d = 0;
-//										}
-//									else if (current_pos_d < stps_d) 
-//										{
-//											go_step_d = stps_d-current_pos_d;
-//											go_dir_d = 1;
-//										} 
-//																
-//									motor_D(1,go_step_d,go_dir_d);
-//									go_step_d = 0;
-//									stop_motor_D();
-
-//									sprintf(valuev,"Current position: %d steps\n", current_pos_d);
-//									HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);
-//								}
-//						break;								
-					
+				
 					case 0:
 							HAL_UART_Transmit(&huart1,(uint8_t *)"invalid command\n",16,0xfff);
 						break;													
 		}
 					memset(uart1_rx_buf, '\0', strlen(uart1_rx_buf)); // очистка памяти
 					uart1_rx_bit=0;                                // очистка счётчика			
-CDC_Transmit_FS((uint8_t*)&usb_rx, strlen(usb_rx));			
+					CDC_Transmit_FS((uint8_t*)&usb_rx, strlen(usb_rx));			
 					memset(usb_rx, 0, sizeof(usb_rx));
 		}
 	
