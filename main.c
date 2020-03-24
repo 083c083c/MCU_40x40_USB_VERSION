@@ -702,6 +702,8 @@ int stps_d;
 					uart1_rx_bit=0;                                // очистка счётчика			
 					CDC_Transmit_FS((uint8_t*)&usb_rx, strlen(usb_rx));			
 					memset(usb_rx, 0, sizeof(usb_rx));
+					stop_motor_F();
+					stop_motor_D();
 		}
 	
 }
