@@ -439,21 +439,37 @@ int stps_d;
 					case 1:	
 							CDC_Transmit_FS((uint8_t *)"Initializing FOCUS\n", 19);						
 							all_steps_f = init_F();
+					if (all_steps_f>3900)
+					{
+							CDC_Transmit_FS((uint8_t *)"INITF FAILED\nTOO MANY STEPS\n", 28);
+							INITF_flag=0;						
+					}
+					else
+					{
 							if (current_pos_f < 0) current_pos_f = 0;
 							else current_pos_f = all_steps_f;
 							CDC_Transmit_FS((uint8_t *)"INITF OK\n", 9);
 //							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
 //							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));					
+					}
 						break;
 					
 					case 2:	
 							CDC_Transmit_FS((uint8_t *)"Initializing DIAPH\n", 19);						
 							all_steps_d = init_D();
+					if (all_steps_d>850)
+					{
+							CDC_Transmit_FS((uint8_t *)"INITD FAILED\nTOO MANY STEPS\n", 28);	
+							INITD_flag=0;						
+					}
+					else
+					{
 							if (current_pos_d < 0) current_pos_d = 0;
 							else current_pos_d = all_steps_d; 
 							CDC_Transmit_FS((uint8_t *)"INITD OK\n", 9);
 //							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
 //							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));					
+					}
 						break;					
 					
 					case 3:		
