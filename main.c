@@ -424,82 +424,29 @@ int stps_d;
 					 else 
 					 {
 							input=0;
-					 }
-
-
-//// const char *str=uart1_rx_buf;
-//				
-//					 if(strcmp(uart1_rx_buf,"INITF\r")==0) 				//инициализация движка. проход от магнита до магнита
-//					 {
-//							input=1;
-//					 }
-//					 else if(strcmp(uart1_rx_buf,"INITD\r")==0) 				//инициализация движка. проход от магнита до магнита
-//					 {
-//							input=2;
-//					 }					 
-//					 else if(strcmp(uart1_rx_buf,"min_f\r")==0) 		//крайнее положение
-//					 {
-//							input=3;
-//					 }
-//					 else if(strcmp(uart1_rx_buf,"min_d\r")==0) 		//крайнее положение
-//					 {
-//							input=4;
-//					 } 					 
-//					 else if(strcmp(uart1_rx_buf,"max_f\r")==0) 		//крайнее положение 
-//					 {
-//							input=5;
-//					 }
-//					 else if(strcmp(uart1_rx_buf,"max_d\r")==0) 		//крайнее положение 
-//					 {
-//							input=6;
-//					 }			 
-//					 else if(strcmp(uart1_rx_buf,"+10f\r")==0) 		//+10 шагов
-//					 {
-//							input=7;
-//					 }
-//					 else if(strcmp(uart1_rx_buf,"+10d\r")==0) 		//+10 шагов
-//					 {
-//							input=8;
-//					 }					 
-//					 else if(strcmp(uart1_rx_buf,"-10f\r")==0) 		//+10 шагов 
-//					 {
-//							input=9;
-//					 }
-//					 else if(strcmp(uart1_rx_buf,"-10d\r")==0) 		//+10 шагов 
-//					 {
-//							input=10;
-//					 }					 
-//					 else if(strcmp(uart1_rx_buf,str)==0) 				//парсинг чисел из терминала
-//					 {
-//							input=11;
-//					 }		 					 
-//					 else 
-//					 {
-//							input=0;
-//					 }
-					 
+					 }		 
 					 
 		switch (input)
 		{
 					
-					case 1:					
-							HAL_UART_Transmit(&huart1,(uint8_t *)"Initializing FOCUS\n", 19,0xfff);
-							
+					case 1:	
+							CDC_Transmit_FS((uint8_t *)"Initializing FOCUS\n", 19);						
 							all_steps_f = init_F();
 							if (current_pos_f < 0) current_pos_f = 0;
 							else current_pos_f = all_steps_f;
-							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);					
+							CDC_Transmit_FS((uint8_t *)"INITF OK\n", 9);
+//							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
+//							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));					
 						break;
 					
-					case 2:					
-							HAL_UART_Transmit(&huart1,(uint8_t *)"Initializing DIAPH\n", 19,0xfff);
-							
+					case 2:	
+							CDC_Transmit_FS((uint8_t *)"Initializing DIAPH\n", 19);						
 							all_steps_d = init_D();
 							if (current_pos_d < 0) current_pos_d = 0;
 							else current_pos_d = all_steps_d; 
-							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);					
+							CDC_Transmit_FS((uint8_t *)"INITD OK\n", 9);
+//							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
+//							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));					
 						break;					
 					
 					case 3:					
@@ -521,8 +468,10 @@ int stps_d;
 							motor_F(1,go_step_f,go_dir_f);
 							go_step_f = 0;
 
-							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);													
+							sprintf(valuev,"Current FOCUS position: %d steps\n", current_pos_f);
+							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));
+							HAL_Delay(1);
+							CDC_Transmit_FS((uint8_t *)"min_f OK\n", 9);								
 						break;
 								
 					case 4:					
@@ -544,8 +493,10 @@ int stps_d;
 							motor_D(1,go_step_d,go_dir_d);
 							go_step_d = 0;
 
-							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);													
+							sprintf(valuev,"Current DIAPH position: %d steps\n", current_pos_d);
+							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));
+							HAL_Delay(1);
+							CDC_Transmit_FS((uint8_t *)"min_d OK\n", 9);														
 						break;								
 					
 					case 5:		
@@ -567,8 +518,10 @@ int stps_d;
 							motor_F(1,go_step_f,go_dir_f);
 							go_step_f = 0;
 
-							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);													
+							sprintf(valuev,"Current FOCUS position: %d steps\n", current_pos_f);
+							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));
+							HAL_Delay(1);								
+							CDC_Transmit_FS((uint8_t *)"max_f OK\n", 9);														
 						break;
 								
 					case 6:		
@@ -590,8 +543,10 @@ int stps_d;
 							motor_D(1,go_step_d,go_dir_d);
 							go_step_d = 0;
 
-							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);													
+							sprintf(valuev,"Current DIAPH position: %d steps\n", current_pos_d);
+							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));
+							HAL_Delay(1);	
+							CDC_Transmit_FS((uint8_t *)"max_d OK\n", 9);														
 						break;								
 					
 					case 7:
@@ -600,13 +555,14 @@ int stps_d;
 							motor_F(1,10,1);
 							go_step_f = 0;
 					
-							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);
+							sprintf(valuev,"Current FOCUS position: %d steps\n", current_pos_f);
+							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));
+							HAL_Delay(1);	
+							CDC_Transmit_FS((uint8_t *)"+10f OK\n", 8);
 							}
 							else 
 							{
-							HAL_UART_Transmit(&huart1,(uint8_t *)"not allowed\n",12,0xfff);	
-							HAL_UART_Transmit(&huart1,(uint8_t *)"<10 steps left\n",15,0xfff);
+							CDC_Transmit_FS((uint8_t *)"+10f not allowed\n<10 steps to MAX\n",34);
 							}					
 						break;
 					
@@ -616,13 +572,14 @@ int stps_d;
 							motor_D(1,10,1);
 							go_step_d = 0;
 							
-							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);														
+							sprintf(valuev,"Current DIAPH position: %d steps\n", current_pos_d);
+							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));
+							HAL_Delay(1);	
+							CDC_Transmit_FS((uint8_t *)"+10d OK\n", 8);								
 							}
 							else 
 							{
-							HAL_UART_Transmit(&huart1,(uint8_t *)"not allowed\n",12,0xfff);	
-							HAL_UART_Transmit(&huart1,(uint8_t *)"<10 steps left\n",15,0xfff);
+							CDC_Transmit_FS((uint8_t *)"+10d not allowed\n<10 steps to MAX\n",34);
 							}
 						break;					
 
@@ -633,13 +590,14 @@ int stps_d;
 							motor_F(1,10,0);
 							go_step_f = 0;
 
-							sprintf(valuev,"Current position: %d steps\n", current_pos_f);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);														
+							sprintf(valuev,"Current FOCUS position: %d steps\n", current_pos_f);
+							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));
+							HAL_Delay(1);	
+							CDC_Transmit_FS((uint8_t *)"-10f OK\n", 8);								
 							}
 							else 
 							{
-							HAL_UART_Transmit(&huart1,(uint8_t *)"not allowed\n",12,0xfff);	
-							HAL_UART_Transmit(&huart1,(uint8_t *)"<10 steps left\n",15,0xfff);
+							CDC_Transmit_FS((uint8_t *)"-10f not allowed\n<10 steps to MIN\n",34);
 							}
 						break;
 					
@@ -649,13 +607,14 @@ int stps_d;
 							motor_D(1,10,0);
 							go_step_d = 0;
 							
-							sprintf(valuev,"Current position: %d steps\n", current_pos_d);
-							HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);
+							sprintf(valuev,"Current DIAPH position: %d steps\n", current_pos_d);
+							CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));
+							HAL_Delay(1);	
+							CDC_Transmit_FS((uint8_t *)"-10d OK\n", 8);
 							}
 							else 
 							{
-							HAL_UART_Transmit(&huart1,(uint8_t *)"not allowed\n",12,0xfff);	
-							HAL_UART_Transmit(&huart1,(uint8_t *)"<10 steps left\n",15,0xfff);
+							CDC_Transmit_FS((uint8_t *)"-10d not allowed\n<10 steps to MIN\n",34);
 							}					
 						break;					
 					
@@ -664,11 +623,11 @@ int stps_d;
 					
 							if (percent_int_f<0)
 								{
-									HAL_UART_Transmit(&huart1,(uint8_t *)"invalid command\n",16,0xfff);
+									CDC_Transmit_FS((uint8_t *)"invalid command\n",16);
 								}
 							else if (percent_int_f>100)
 								{
-									HAL_UART_Transmit(&huart1,(uint8_t *)"invalid command\n",16,0xfff);
+									CDC_Transmit_FS((uint8_t *)"invalid command\n",16);
 								}								
 							else
 								{
@@ -689,13 +648,15 @@ int stps_d;
 									motor_F(1,go_step_f,go_dir_f);
 									go_step_f = 0;
 
-									sprintf(valuev,"Current position: %d steps\n", current_pos_f);
-									HAL_UART_Transmit(&huart1, (uint8_t *)valuev, strlen(valuev),0xfff);
+									sprintf(valuev,"Current FOCUS position: %d steps\n", current_pos_f);
+									CDC_Transmit_FS((uint8_t *)valuev, strlen(valuev));
+									HAL_Delay(1);	
+									CDC_Transmit_FS((uint8_t *)"FOCUS OK\n",9);
 								}
 						break;
 				
 					case 0:
-							HAL_UART_Transmit(&huart1,(uint8_t *)"invalid command\n",16,0xfff);
+							CDC_Transmit_FS((uint8_t *)"invalid command\n",16);
 						break;													
 		}
 					memset(uart1_rx_buf, '\0', strlen(uart1_rx_buf)); // очистка памяти
