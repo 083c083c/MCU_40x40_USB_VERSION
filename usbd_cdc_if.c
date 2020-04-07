@@ -93,8 +93,8 @@
 /* USER CODE BEGIN PRIVATE_DEFINES */
 /* Define size for the receive and transmit buffer over CDC */
 /* It's up to user to redefine and/or remove those define */
-#define APP_RX_DATA_SIZE  100
-#define APP_TX_DATA_SIZE  100
+#define APP_RX_DATA_SIZE  1000
+#define APP_TX_DATA_SIZE  1000
 /* USER CODE END PRIVATE_DEFINES */
 
 /**
@@ -127,7 +127,7 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
-char usb_rx[20];
+char usb_rx[128];
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**

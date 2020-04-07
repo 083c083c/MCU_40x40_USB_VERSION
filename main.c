@@ -1,3 +1,4 @@
+// COMPLETELY STABLE VERSION OF MCU_V_1 SOFTWARE
 #include "main.h"
 #include "stm32f1xx_hal.h"
 #include "usb_device.h"
@@ -50,7 +51,7 @@ char uart1_data;
 char uart1_rx_buf[128];	
 uint8_t uart1_rx_bit; 
 char input;
-extern char usb_rx[20];
+extern char usb_rx[128];
 int speed=1;
 int current_pos_f;
 int current_pos_d;
@@ -87,7 +88,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void EXTI1_IRQHandler(void)						//edge_detect interrupt UPPER SENSOR
+void EXTI1_IRQHandler(void)						//edge_detect interrupt FOCUS SENSOR
 {
 
   if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1))
@@ -103,7 +104,7 @@ void EXTI1_IRQHandler(void)						//edge_detect interrupt UPPER SENSOR
 								
 		HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
 }
-void EXTI0_IRQHandler(void)						//edge_detect interrupt LOWER SENSOR
+void EXTI0_IRQHandler(void)						//edge_detect interrupt DIAPH SENSOR
 {
 
   if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
@@ -119,7 +120,24 @@ void EXTI0_IRQHandler(void)						//edge_detect interrupt LOWER SENSOR
 								
 		HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
 }
+void EXTI12_IRQHandler(void)						//interrupt FAULT
+{
 
+  if (HAL_GPIO_ReadPin(STMPS_PORT, STMPS_FT))
+					{
+						HAL_UART_Transmit(&huart1, (uint8_t *)"ZAP!\n", 5, 0xfff);
+						HAL_GPIO_WritePin(STMPS_PORT, STMPS_EN, GPIO_PIN_SET);
+						HAL_Delay(50);
+						HAL_GPIO_WritePin(STMPS_PORT, STMPS_EN, GPIO_PIN_RESET);
+					}
+//	else if (HAL_GPIO_ReadPin(STMPS_PORT, STMPS_FT)==0)
+//					{
+//						HAL_UART_Transmit(&huart1, (uint8_t *)"ok! go!\n", 8, 0xfff);
+//						HAL_GPIO_WritePin(STMPS_PORT, STMPS_EN, GPIO_PIN_RESET);					
+//					}
+								
+		HAL_GPIO_EXTI_IRQHandler(STMPS_FT);
+}
 void stop_motor_F() 																	//функция остановки движка фокуса
 {
 		HAL_GPIO_WritePin(PORT_M_2,WHITE_3,GPIO_PIN_RESET);
@@ -938,6 +956,7 @@ if (INITF_flag==0 || INITD_flag==0)
 					uart1_rx_bit=0;                                // очистка счётчика			
 					CDC_Transmit_FS((uint8_t*)&usb_rx, strlen(usb_rx));			
 					memset(usb_rx, 0, sizeof(usb_rx));
+					memset(usb_rx, '\0', sizeof(usb_rx));
 					stop_motor_F();
 					stop_motor_D();
 		}
@@ -958,6 +977,8 @@ void EXTI_Init (void)
   NVIC_EnableIRQ(EXTI1_IRQn);
 	EXTI->PR = EXTI_PR_PR0;      //Сбрасываем флаг прерывания 
   NVIC_EnableIRQ(EXTI0_IRQn);
+	EXTI->PR = EXTI_PR_PR12;      //Сбрасываем флаг прерывания 
+  NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 /* USER CODE END PFP */
 
@@ -996,13 +1017,16 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_USART1_UART_Init();
+	MX_USB_DEVICE_Init();
   MX_ADC1_Init();
   MX_USART3_UART_Init();
   MX_TIM3_Init();
-  MX_USB_DEVICE_Init();
-  /* USER CODE BEGIN 2 */
+    /* USER CODE BEGIN 2 */
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+	HAL_GPIO_EXTI_IRQHandler(STMPS_FT);
+	
+	HAL_GPIO_WritePin(STMPS_PORT, STMPS_EN, GPIO_PIN_RESET);
 	
   HAL_GPIO_WritePin(PORT_M_1,EN_MOT_1_1,GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOC,EN_MOT_1_2,GPIO_PIN_SET);
@@ -1265,6 +1289,19 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+	
+	// reset USB DP (D+)
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET); 
+  for(uint16_t i = 0; i < 10000; i++) {};
+
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  for(uint16_t i = 0; i < 10000; i++) {}; 
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_10 
@@ -1321,15 +1358,28 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB0 PB12 PB13 PB14 
+  /*Configure GPIO pins : PB0 PB14 
                            PB15 PB4 PB5 PB6 
                            PB7 PB8 PB9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14 
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_14 
                           |GPIO_PIN_15|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6 
                           |GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	  /*Configure GPIO pin : PB13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	/*Configure GPIO pin : PB12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA8 */
@@ -1346,11 +1396,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
-	HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+	HAL_NVIC_SetPriority(EXTI0_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
+	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 /* USER CODE BEGIN 4 */
